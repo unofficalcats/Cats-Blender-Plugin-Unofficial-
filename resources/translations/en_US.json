@@ -597,6 +597,8 @@
         "Scene.remove_rigidbodies_joints.desc": "Rigidbodies and joints are used by MMD software to simulate physics.\nThey are completely useless for VRChat, so removing them is recommended for VRChat users!",
         "Scene.use_google_only.label": "Use Old Translations (not recommended)",
         "Scene.use_google_only.desc": "Ignores the internal dictionary and only uses the Google Translator for shape key translations.\n\nThis will result in slower translation speed and worse translations, but the translations will be like in CATS version 0.9.0 and older.\nOnly use this if you have animations which rely on the old translations and you don't want to convert them to the new ones",
+        "Scene.skip_locked_shape_keys.label": "Skip Locked Shape Keys",
+        "Scene.skip_locked_shape_keys.desc": "When checked, skips translating locked shape keys. To lock or unlock a shape key, click the lock icon next to it, or click and drag over multiple lock icons to lock or unlock multiple ones.",
         "Scene.show_more_options.label": "Show More Options",
         "Scene.show_more_options.desc": "Shows more model options",
         "Scene.merge_mode.label": "Merge Mode",

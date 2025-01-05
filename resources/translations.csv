@@ -874,6 +874,8 @@ They are completely useless for VRChat, so removing them is recommended for VRCh
 VRChat에 사용되지않으므로 VRChat 유저들에게는 이것들을 지우는 게 좋습니다!"
 Scene.use_google_only.label,Use Old Translations (not recommended),古い翻訳を使用する(推奨しません),구버전 번역을 사용 (권장되지 않음)
 Scene.use_google_only.desc,"Ignores the internal dictionary and only uses the Google Translator for shape key translations.
+Scene.skip_locked_shape_keys.label,Skip Locked Shape Keys
+Scene.skip_locked_shape_keys.desc,When checked, skips translating locked shape keys. To lock or unlock a shape key, click the lock icon next to it, or click and drag over multiple lock icons to lock or unlock multiple ones.
 
 This will result in slower translation speed and worse translations, but the translations will be like in CATS version 0.9.0 and older.
 Only use this if you have animations which rely on the old translations and you don't want to convert them to the new ones",,"내장된 사전 대신에 구글 번역기를 쉐이프키 번역에 사용합니다.

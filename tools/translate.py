@@ -68,6 +68,7 @@ class TranslateShapekeyButton(bpy.types.Operator):
             self.report({'ERROR'}, "Unable to write to export folder. Please manually set the export directory")
             return {'CANCELLED'}
             
+        skip_locked_shape_keys = bpy.context.scene.skip_locked_shape_keys
         if context.scene.export_translate_csv:
             
             blend_path = bpy.context.blend_data.filepath
@@ -79,7 +80,7 @@ class TranslateShapekeyButton(bpy.types.Operator):
             for mesh in Common.get_meshes_objects(mode=2):
                 if Common.has_shapekeys(mesh):
                     for key in mesh.data.shape_keys.key_blocks:
-                        if 'vrc.' not in key.name:
+                        if can_translate_shape_key(key, skip_locked_shape_keys):
                             to_translate.append(key.name)
 
             update_dictionary(to_translate, translating_shapes=True, self=self)
@@ -90,7 +91,7 @@ class TranslateShapekeyButton(bpy.types.Operator):
             for mesh in Common.get_meshes_objects(mode=2):
                 if Common.has_shapekeys(mesh):
                     for key in mesh.data.shape_keys.key_blocks:
-                        if 'vrc.' not in key.name:  
+                        if can_translate_shape_key(key, skip_locked_shape_keys):
                             original_name = key.name
                             key.name, translated = translate(key.name, add_space=True, translating_shapes=True)
                 
@@ -116,7 +117,7 @@ class TranslateShapekeyButton(bpy.types.Operator):
             for mesh in Common.get_meshes_objects(mode=2):
                 if Common.has_shapekeys(mesh):
                     for shapekey in mesh.data.shape_keys.key_blocks:
-                        if 'vrc.' not in shapekey.name and shapekey.name not in to_translate:
+                        if can_translate_shape_key(shapekey, skip_locked_shape_keys) and shapekey.name not in to_translate:
                             to_translate.append(shapekey.name)
 
             update_dictionary(to_translate, translating_shapes=True, self=self)
@@ -127,7 +128,7 @@ class TranslateShapekeyButton(bpy.types.Operator):
             for mesh in Common.get_meshes_objects(mode=2):
                 if Common.has_shapekeys(mesh):
                     for shapekey in mesh.data.shape_keys.key_blocks:
-                        if not shapekey.lock_shape and 'vrc.' not in shapekey.name:
+                        if can_translate_shape_key(shapekey, skip_locked_shape_keys):
                             shapekey.name, translated = translate(shapekey.name, add_space=True, translating_shapes=True)
                             if translated:
                                 i += 1
@@ -780,3 +781,15 @@ def reset_google_dict():
 def save_google_dict():
     with open(dictionary_google_file, 'w', encoding="utf8") as outfile:
         json.dump(dictionary_google, outfile, ensure_ascii=False, indent=4)
+
+
+# Check if shape key meets translation conditions
+def can_translate_shape_key(shapekey, skip_locked_shape_keys):
+    if skip_locked_shape_keys:
+        if not shapekey.lock_shape:
+            if 'vrc.' not in shapekey.name:
+                return True
+    else:
+        if 'vrc.' not in shapekey.name:
+            return True
+    return False

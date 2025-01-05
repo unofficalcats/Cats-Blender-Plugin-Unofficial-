@@ -106,6 +106,12 @@ def register():
         default=False
     )
 
+    Scene.skip_locked_shape_keys = BoolProperty(
+        name=t('Scene.skip_locked_shape_keys.label'),
+        description=t('Scene.skip_locked_shape_keys.desc'),
+        default=False
+    )
+
     Scene.keep_merged_bones = BoolProperty(
         name=t('keep_merged_bones'),
         description=t('select_this_to_keep_the_bones_after_merging_them_to_their_parents_or_to_the_active_bone'),
