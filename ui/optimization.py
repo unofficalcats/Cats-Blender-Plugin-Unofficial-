@@ -210,7 +210,9 @@ class OptimizePanel(ToolPanel, bpy.types.Panel):
         options_col.scale_y = 0.75
         options_col.separator()
         options_col.prop(context.scene, "delete_zero_weight_keep_twists")
-        
+        options_col.prop(context.scene, "delete_zero_weight_keep_empty_parents")
+        options_col.prop(context.scene, "delete_zero_weight_skip_hidden_bones")
+
         # Extra operations box
         extra_box = box.box()
         extra_col = extra_box.column(align=True)

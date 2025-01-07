@@ -215,6 +215,18 @@ def register():
         default=False
     )
 
+    Scene.delete_zero_weight_keep_empty_parents = BoolProperty(
+        name=t('Scene.delete_zero_weight_keep_empty_parents.label'),
+        description=t('Scene.delete_zero_weight_keep_empty_parents.desc'),
+        default=False
+    )
+
+    Scene.delete_zero_weight_skip_hidden_bones = BoolProperty(
+        name=t('Scene.delete_zero_weight_skip_hidden_bones.label'),
+        description=t('Scene.delete_zero_weight_skip_hidden_bones.desc'),
+        default=False
+    )
+
     Scene.merge_armatures_cleanup_shape_keys = BoolProperty(
         name=t('Scene.merge_armatures_cleanup_shape_keys.label'),
         description=t('Scene.merge_armatures_cleanup_shape_keys.desc'),
