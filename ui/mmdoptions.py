@@ -58,21 +58,7 @@ class MMDOptions(ToolPanel, bpy.types.Panel):
         
         row = material_col.row(align=True)
         row.scale_y = 1.5
-        row.operator(Material.CombineMaterialsButton.bl_idname, icon='MATERIAL')
-
-        material_col.separator(factor=1.5)
-        
-        # Material Fix Info
-        mat_info_col = material_col.column(align=True)
-        mat_info_col.scale_y = 0.75
-        mat_info_col.label(text=t("MMDOptions.FixMaterialinfo1"), icon='INFO')
-        mat_info_col.label(text=t("MMDOptions.FixMaterialinfo2"), icon='BLANK1')
-        
-        material_col.separator(factor=1.5)
-
-        row = material_col.row(align=True)
-        row.scale_y = 1.5
-        row.operator(Material.FixMaterialsButton.bl_idname, text=t('mmdoptions.FixMaterialsButton.label'), icon='NODE_MATERIAL')
+        row.operator(MaterialDeprecationWarning.bl_idname, icon='MATERIAL')
 
         # Rigidbodies section
         rigid_box = box.box()
@@ -98,6 +84,34 @@ class MMDOptions(ToolPanel, bpy.types.Panel):
         row = help_col.row(align=True)
         row.scale_y = 1.5
         row.operator(MMDOptionswiki.bl_idname, icon_value=Iconloader.preview_collections["custom_icons"]["help1"].icon_id)
+
+@register_wrap
+class MaterialDeprecationWarning(bpy.types.Operator):
+    bl_idname = "cats_materials.deprecation_warning"
+    bl_label = t('MaterialDeprecation.label')
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        dpi_value = Common.get_user_preferences().system.dpi
+        return context.window_manager.invoke_props_dialog(self, width=int(dpi_value * 5.2))
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column(align=True)
+        
+        warning_col = col.column(align=True)
+        warning_col.scale_y = 1.0
+        warning_col.label(text=t('MaterialDeprecation.info1'))
+        warning_col.label(text=t('MaterialDeprecation.info2'))
+        warning_col.label(text=t('MaterialDeprecation.info3'))
+        warning_col.label(text=t('MaterialDeprecation.info4'))
+        warning_col.label(text=t('MaterialDeprecation.info5'))
+        warning_col.separator()
+        warning_col.label(text=t('MaterialDeprecation.info6'))
+        warning_col.label(text=t('MaterialDeprecation.info7'))
 
 @register_wrap
 class MMDOptionswiki(bpy.types.Operator):

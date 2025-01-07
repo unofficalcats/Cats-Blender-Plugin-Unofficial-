@@ -130,47 +130,6 @@ class CombineMaterialsButton(bpy.types.Operator):
         return {'FINISHED'}
 
 @register_wrap
-class FixMaterialsButton(bpy.types.Operator):
-    bl_idname = 'cats_material.fix'
-    bl_label = t('FixMaterialsButton.label')
-    bl_description = t('FixMaterialsButton.desc')
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    @classmethod
-    def poll(cls, context):
-        if not Common.get_armature():
-            return False
-
-        if len(Common.get_armature_objects()) == 0:
-            return False
-
-        return True
-
-    def execute(self, context):           
-        armature = Common.get_armature()
-        meshes = Common.get_meshes_objects()
-
-        Common.set_material_shading()
-        # If all materials are transparent, make them visible. Also set transparency always to Z-Transparency
-            # Make materials exportable in Blender 2.80 and remove glossy mmd shader look
-            # Common.remove_toon_shader(mesh)
-        for mesh in meshes:
-            # Clean material names before trying to fix them.
-            Common.clean_material_names(mesh)
-            
-            if mmd_tools_local_installed:
-                Common.fix_mmd_shader(mesh)
-            Common.fix_vrm_shader(mesh)
-            Common.add_principled_shader(mesh)
-            for mat_slot in mesh.material_slots:  # Fix transparency per polygon and general garbage look in blender. Asthetic purposes to fix user complaints.
-                mat_slot.material.blend_method = "HASHED"
-        
-        materials = set() 
-
-        self.report({'INFO'}, "Fixed materials")
-        return {'FINISHED'} 
-
-@register_wrap
 class ConvertAllToPngButton(bpy.types.Operator):
     bl_idname = 'cats_material.convert_all_to_png'
     bl_label = t('ConvertAllToPngButton.label')
