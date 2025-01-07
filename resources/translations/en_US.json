@@ -127,6 +127,8 @@
         "Scene.eye_right.desc": "The models right eye bone",
         "Scene.removerigidbodiesjointsglobal.label": "Remove Rigidbodies and Joints Global",
         "Scene.removerigidbodiesjointsglobal.desc": "Removes all Rigidbodies and Joints from the scene whenever a button is used\nThis is on by default as if rigidbodies collections are not removed it can cause issues.\nOnly turn off if you need rigid bodies persevered for MMD reasons.",
+        "Scene.skip_locked_shape_keys.label": "Skip Locked Shape Keys",
+        "Scene.skip_locked_shape_keys.desc": "When checked, skips translating locked shape keys. To lock or unlock a shape key, click the lock icon next to it, or click and drag over multiple lock icons to lock or unlock multiple ones.",
         "FixLegacy.info1": "Fix Model Button has been removed.",
         "FixLegacy.info2": "please see mmd options for alternatives.",
         "LegacyStuff.label": "Legacy Features",
