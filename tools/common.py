@@ -317,7 +317,6 @@ def find_center_vector_of_vertex_group(mesh, vertex_group):
     vg = mesh.vertex_groups.get(vertex_group)
     if vg is None:
         return None  # Vertex group doesn't exist
-
     for vert in verts:
         i = vert.index
         try:
@@ -329,7 +328,6 @@ def find_center_vector_of_vertex_group(mesh, vertex_group):
 
     if not verts_in_group:
         return None  # No vertices in the group
-
     # Calculate the average position
     total = Vector()
     for vert in verts_in_group:
@@ -657,6 +655,68 @@ def get_meshes_objects(armature_name=None, mode=0, check=True, visible_only=Fals
 
     return meshes
 
+def get_meshes_objects_for_export(armature_name=None, mode=0, check=True):
+    context = bpy.context
+    # Modes:
+    # 0 = With armatures only
+    # 1 = Top level only
+    # 2 = All meshes
+    # 3 = Selected only
+
+    if not armature_name:
+        armature = get_armature()
+        if armature:
+            armature_name = armature.name
+
+    meshes = []
+    
+    for ob in get_objects():
+            if ob is None:
+                continue
+            if ob.type != 'MESH':
+                continue
+                
+            if mode == 0 or mode == 5: 
+                if ob.parent:
+                    if ob.parent.type == 'ARMATURE' and ob.parent.name == armature_name:
+                        meshes.append(ob)
+                    elif ob.parent.parent and ob.parent.parent.type == 'ARMATURE' and ob.parent.parent.name == armature_name:
+                        meshes.append(ob) 
+
+            elif mode == 1:
+                if not ob.parent:
+                    meshes.append(ob)
+
+            elif mode == 2:
+                meshes.append(ob)
+
+            elif mode == 3:
+                if ob.select_get():
+                    meshes.append(ob)
+
+    # Check for broken meshes and delete them
+    if check:
+        current_active = context.view_layer.objects.active
+        to_remove = []
+        for mesh in meshes:
+            selected = mesh.select_get()
+            set_active(mesh)
+
+            if not context.view_layer.objects.active:
+                to_remove.append(mesh)
+
+            if not selected:
+                select(mesh, False)
+
+        for mesh in to_remove:
+            print('DELETED CORRUPTED MESH:', mesh.name, mesh.users)
+            meshes.remove(mesh)
+            delete(mesh)
+
+        if current_active:
+            set_active(current_active)
+
+    return meshes
 
 def join_meshes(armature_name=None, mode=0, apply_transformations=True, repair_shape_keys=True):
     # Modes:
@@ -1478,14 +1538,13 @@ def clean_material_names(mesh):
             mesh.active_material_index = j
             mesh.active_material.name = mat.name[:-len(mat.name.rstrip('0')) - 1]
 
+
 def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', mix_set='ALL', delete_old_vg=True):
     """Mix the weights of two vertex groups on the mesh, optionally removing the vertex group named vg_from.
-
     This function uses the Vertex Weight Mix modifier to efficiently mix vertex group weights.
     """
     # Ensure the correct shape key is active
     mesh.active_shape_key_index = 0
-
     # Create the Vertex Weight Mix modifier
     mod = mesh.modifiers.new(name="VertexWeightMix_" + vg_from + "_into_" + vg_to, type='VERTEX_WEIGHT_MIX')
     mod.vertex_group_a = vg_to
@@ -1493,13 +1552,11 @@ def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', mix_set=
     mod.mix_mode = mix_mode
     mod.mix_set = mix_set  # Use 'ALL' to include all vertices
     mod.mask_constant = mix_strength  # Strength of the mix
-
     # Apply the modifier to the mesh
     # Depending on your Blender version, you may need to adjust how the modifier is applied.
     if bpy.ops.object.modifier_apply.poll():
         mesh.modifiers.active = mod
         bpy.ops.object.modifier_apply(modifier=mod.name)
-
     # Optionally remove the source vertex group
     if delete_old_vg:
         vg_from_group = mesh.vertex_groups.get(vg_from)
@@ -1508,6 +1565,7 @@ def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', mix_set=
 
     # Reset the active shape key index
     mesh.active_shape_key_index = 0
+
 
 def get_user_preferences():
     return bpy.context.user_preferences if hasattr(bpy.context, 'user_preferences') else bpy.context.preferences
@@ -1807,75 +1865,6 @@ def add_principled_shader(mesh: Object, bake_mmd=True):
                 # Link principled BSDF node's output to the material output
                 node_tree.links.new(cats_principled_bsdf.outputs["BSDF"], cats_material_output.inputs["Surface"])
                 
-
-def fix_mmd_shader(mesh_obj: bpy.types.Object):
-    # Iterate through each material slot in the mesh object
-    for mat_slot in mesh_obj.material_slots:
-        # Skip the current iteration if the material or its node tree is missing
-        material = mat_slot.material
-        if not material or not material.node_tree:
-            continue
-
-        # Get the nodes of the material's node tree
-        mmd_shader_node = material.node_tree.nodes.get("mmd_shader")
-        # If the 'mmd_shader' node doesn't exist, skip the current iteration
-        if not mmd_shader_node:
-            continue
-
-        # Get the 'Reflect' input of the 'mmd_shader' node
-        reflect_input = mmd_shader_node.inputs.get("Reflect")
-        # If the 'Reflect' input doesn't exist, skip the current iteration
-        if not reflect_input:
-            continue
-
-        # Set the default value of the 'Reflect' input to 1
-        reflect_input.default_value = 1
-        # Exit the loop once the 'mmd_shader' node is found
-        break
-
-
-def fix_vrm_shader(mesh: bpy.types.Mesh):
-    # Iterate through each material slot in the mesh
-    for mat_slot in mesh.material_slots:
-        # Skip this iteration if the material or its node tree is missing
-        if not mat_slot.material or not mat_slot.material.node_tree:
-            continue
-
-        is_vrm_mat = False
-        nodes = mat_slot.material.node_tree.nodes
-        # Iterate through each node in the material's node tree
-        for node in nodes:
-            # Check if the node has a node tree and its name contains 'MToon_unversioned'
-            if hasattr(node, 'node_tree') and 'MToon_unversioned' in node.node_tree.name:
-                # Set the node's location and default values for certain inputs
-                node.location[0] = 200
-                node.inputs['ReceiveShadow_Texture_alpha'].default_value = -10000
-                node.inputs['ShadeTexture'].default_value = (1.0, 1.0, 1.0, 1.0)
-                node.inputs['Emission_Texture'].default_value = (0.0, 0.0, 0.0, 0.0)
-                node.inputs['SphereAddTexture'].default_value = (0.0, 0.0, 0.0, 0.0)
-
-                node_input = node.inputs.get('NomalmapTexture') or node.inputs.get('NormalmapTexture')
-                node_input.default_value = (1.0, 1.0, 1.0, 1.0)
-
-                is_vrm_mat = True
-                break
-
-        if not is_vrm_mat:
-            continue
-
-        nodes_to_keep = ['DiffuseColor', 'MainTexture', 'Emission_Texture']
-        if 'HAIR' in mat_slot.material.name:
-            nodes_to_keep = ['DiffuseColor', 'MainTexture', 'Emission_Texture', 'SphereAddTexture']
-
-        # Iterate through each node in the material's node tree again
-        for node in nodes:
-            # Check if the node's name contains certain keywords and its label is not in the list of nodes to keep
-            if 'RGB' in node.name or 'Value' in node.name or 'Image Texture' in node.name or 'UV Map' in node.name or 'Mapping' in node.name:
-                if node.label not in nodes_to_keep:
-                    # Remove all links connected to the node
-                    mat_slot.material.node_tree.links = [link for link in mat_slot.material.node_tree.links if not (link.from_node == node or link.to_node == node)]
-
-
 def fix_twist_bones(mesh, bones_to_delete):
     # This will fix MMD twist bones
 
