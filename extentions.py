@@ -37,6 +37,21 @@ def register():
         description=t('Scene.shapekeycsv.desc'),
         default = False
     )
+
+    Scene.progress_update = FloatProperty(
+        name=t('Scene.progress_update.label'),
+        description=t('Scene.progress_update.desc'), 
+        default=0.0,
+        min=0.0,
+        max=100.0,
+        subtype='PERCENTAGE',
+        options={'HIDDEN'}
+    )
+    Scene.generate_twistbones_upper = BoolProperty(
+        name=t('Scene.generate_twistbones_upper.label'),
+        description=t('Scene.generate_twistbones_upper.desc'),
+        default=True
+    )
     
     Scene.armature = EnumProperty(
         name=t('Scene.armature.label'),
@@ -61,6 +76,16 @@ def register():
         name=t('Scene.remove_zero_weight.label'),
         description=t('Scene.remove_zero_weight.desc'),
         default=True
+    )
+
+    Scene.eye_tracking_mode = EnumProperty(
+        name=t('Scene.eye_tracking_mode.label'),
+        description=t('Scene.eye_tracking_mode.desc'),
+        items=[
+            ('SDK3', t('Scene.eye_tracking_mode.sdk3.label'), t('Scene.eye_tracking_mode.sdk3.desc')),
+            ('LEGACY', t('Scene.eye_tracking_mode.legacy.label'), t('Scene.eye_tracking_mode.legacy.desc'))
+        ],
+        default='SDK3'
     )
 
     Scene.keep_end_bones = BoolProperty(
@@ -346,6 +371,50 @@ def register():
     )
 
     # Visemes
+
+    Scene.viseme_preview_mode = BoolProperty(
+        name=t('Scene.viseme_preview_mode.label'),
+        description=t('Scene.viseme_preview_mode.desc'),
+        default=False
+    )
+    
+    Scene.viseme_preview_selection = EnumProperty(
+        name=t('Scene.viseme_preview_selection.label'),
+        description=t('Scene.viseme_preview_selection.desc'),
+        items=[
+            ('vrc.v_aa', 'A', 'Viseme A sound'),
+            ('vrc.v_ch', 'CH', 'Viseme CH sound'),
+            ('vrc.v_dd', 'DD', 'Viseme DD sound'),
+            ('vrc.v_e', 'E', 'Viseme E sound'),
+            ('vrc.v_ff', 'FF', 'Viseme FF sound'),
+            ('vrc.v_ih', 'IH', 'Viseme IH sound'),
+            ('vrc.v_kk', 'KK', 'Viseme KK sound'),
+            ('vrc.v_nn', 'NN', 'Viseme NN sound'),
+            ('vrc.v_oh', 'OH', 'Viseme OH sound'),
+            ('vrc.v_ou', 'OU', 'Viseme OU sound'),
+            ('vrc.v_pp', 'PP', 'Viseme PP sound'),
+            ('vrc.v_rr', 'RR', 'Viseme RR sound'),
+            ('vrc.v_sil', 'SIL', 'Viseme SIL sound'),
+            ('vrc.v_ss', 'SS', 'Viseme SS sound'),
+            ('vrc.v_th', 'TH', 'Viseme TH sound'),
+        ],
+        update=lambda self, context: Viseme.VisemePreview.update_preview(context)
+    )
+    Scene.viseme_validate_deformation = BoolProperty(
+        name=t('Scene.viseme_validate_deformation.label'),
+        description=t('Scene.viseme_validate_deformation.desc'),
+        default=True
+    )
+    Scene.remove_doubles_threshold = FloatProperty(
+        name=t('Scene.remove_doubles_threshold.label'),
+        description=t('Scene.remove_doubles_threshold.desc'),
+        default=0.00002,
+        min=0.00001,
+        max=0.01,
+        precision=6,
+        step=0.00001
+    )
+    
     Scene.mesh_name_viseme = EnumProperty(
         name=t('Scene.mesh_name_viseme.label'),
         description=t('Scene.mesh_name_viseme.desc'),

@@ -1883,9 +1883,7 @@ def fix_mmd_shader(mesh_obj: bpy.types.Object):
         break
 
 def fix_vrm_shader(mesh: bpy.types.Mesh):
-    # Iterate through each material slot in the mesh
     for mat_slot in mesh.material_slots:
-        # Skip this iteration if the material or its node tree is missing
         if not mat_slot.material or not mat_slot.material.node_tree:
             continue
 
@@ -1893,11 +1891,9 @@ def fix_vrm_shader(mesh: bpy.types.Mesh):
         nodes = mat_slot.material.node_tree.nodes
         links = mat_slot.material.node_tree.links
         
-        # Iterate through each node in the material's node tree
+        # First identify VRM material
         for node in nodes:
-            # Check if the node has a node tree and its name contains 'MToon_unversioned'
             if hasattr(node, 'node_tree') and 'MToon_unversioned' in node.node_tree.name:
-                # Set the node's location and default values for certain inputs
                 node.location[0] = 200
                 node.inputs['ReceiveShadow_Texture_alpha'].default_value = -10000
                 node.inputs['ShadeTexture'].default_value = (1.0, 1.0, 1.0, 1.0)
@@ -1917,18 +1913,22 @@ def fix_vrm_shader(mesh: bpy.types.Mesh):
         if 'HAIR' in mat_slot.material.name:
             nodes_to_keep = ['DiffuseColor', 'MainTexture', 'Emission_Texture', 'SphereAddTexture']
 
-        # Instead of list comprehension, remove links one by one
-        links_to_remove = []
-        for link in links:
-            if ('RGB' in link.from_node.name or 'Value' in link.from_node.name or 
-                'Image Texture' in link.from_node.name or 'UV Map' in link.from_node.name or 
-                'Mapping' in link.from_node.name):
-                if link.from_node.label not in nodes_to_keep:
-                    links_to_remove.append(link)
+        # Only remove nodes that aren't in the keep list and aren't essential
+        nodes_to_remove = []
+        for node in nodes:
+            if node.type in {'RGB', 'VALUE', 'TEX_IMAGE', 'MAPPING', 'UVMAP'}:
+                if node.label not in nodes_to_keep and node.name not in nodes_to_keep:
+                    nodes_to_remove.append(node)
 
-        # Remove the links
-        for link in links_to_remove:
-            links.remove(link)
+        # Remove links first
+        for link in links:
+            if link.from_node in nodes_to_remove or link.to_node in nodes_to_remove:
+                links.remove(link)
+
+        # Then remove nodes
+        for node in nodes_to_remove:
+            nodes.remove(node)
+
 
 
 def fix_twist_bones(mesh, bones_to_delete):
