@@ -187,12 +187,12 @@ class EyeTrackingPanel(ToolPanel, bpy.types.Panel):
         if not armature:
             bones_col.label(text=t('EyeTrackingPanel.error.noArm'), icon='ERROR')
             return
-            
+
         row = bones_col.row(align=True)
         row.scale_y = 1.1
         row.label(text=t('Scene.eye_left.label') + ":")
         row.prop_search(context.scene, "eye_left", armature.data, "bones", text="")
-        
+
         row = bones_col.row(align=True)
         row.scale_y = 1.1
         row.label(text=t('Scene.eye_right.label') + ":")
@@ -288,23 +288,25 @@ class EyeTrackingPanel(ToolPanel, bpy.types.Panel):
         row.prop(context.scene, 'mesh_name_eye', icon='MESH_DATA')
 
     def draw_bone_selection(self, context, col):
+        armature = Common.get_armature()
+        
         col.separator()
         row = col.row(align=True)
         row.scale_y = 1.1
         row.label(text=t('Scene.head.label')+":")
-        row.prop_search(context.scene, "head", context.active_object.data, "bones", text="")
+        row.prop_search(context.scene, "head", armature.data, "bones", text="")
 
         row = col.row(align=True)
         row.scale_y = 1.1
         row.active = not context.scene.disable_eye_movement
         row.label(text=t('Scene.eye_left.label')+":")
-        row.prop_search(context.scene, "eye_left", context.active_object.data, "bones", text="")
+        row.prop_search(context.scene, "eye_left", armature.data, "bones", text="")
 
         row = col.row(align=True)
         row.scale_y = 1.1
         row.active = not context.scene.disable_eye_movement
         row.label(text=t('Scene.eye_right.label')+":")
-        row.prop_search(context.scene, "eye_right", context.active_object.data, "bones", text="")
+        row.prop_search(context.scene, "eye_right", armature.data, "bones", text="")
 
     def draw_shapekey_selection(self, context, col):
         col.separator()
@@ -468,3 +470,4 @@ class EyeTrackingPanel(ToolPanel, bpy.types.Panel):
         row.label(text=t('EyeTrackingPanel.warn.assignEyes1'), icon='INFO')
         row = col.row(align=True)
         row.label(text=t('EyeTrackingPanel.warn.assignEyes2'))
+
