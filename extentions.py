@@ -11,6 +11,7 @@ from .tools import settings as Settings
 from .tools import importer as Importer
 from .tools import translations as Translations
 from .tools.translations import t
+from .tools import viseme as Viseme
 
 from bpy.types import Scene
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, StringProperty
@@ -400,11 +401,13 @@ def register():
         ],
         update=lambda self, context: Viseme.VisemePreview.update_preview(context)
     )
+    
     Scene.viseme_validate_deformation = BoolProperty(
         name=t('Scene.viseme_validate_deformation.label'),
         description=t('Scene.viseme_validate_deformation.desc'),
         default=True
     )
+
     Scene.remove_doubles_threshold = FloatProperty(
         name=t('Scene.remove_doubles_threshold.label'),
         description=t('Scene.remove_doubles_threshold.desc'),
@@ -414,7 +417,7 @@ def register():
         precision=6,
         step=0.00001
     )
-    
+
     Scene.mesh_name_viseme = EnumProperty(
         name=t('Scene.mesh_name_viseme.label'),
         description=t('Scene.mesh_name_viseme.desc'),
