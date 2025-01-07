@@ -313,29 +313,27 @@ def find_center_vector_of_vertex_group(mesh, vertex_group):
     verts = data.vertices
     verts_in_group = []
 
-    # Ensure the vertex group exists
-    vg = mesh.vertex_groups.get(vertex_group)
-    if vg is None:
-        return None  # Vertex group doesn't exist
-
     for vert in verts:
         i = vert.index
         try:
-            if vg.weight(i) > 0:
+            if mesh.vertex_groups[vertex_group].weight(i) > 0:
                 verts_in_group.append(vert)
         except RuntimeError:
-            # Vertex is not in the group
+            # vertex is not in the group
             pass
 
-    if not verts_in_group:
-        return None  # No vertices in the group
-
-    # Calculate the average position
+    # Find the average vector point of the vertex cluster
+    divide_by = len(verts_in_group)
     total = Vector()
+
+    if divide_by == 0:
+        return False
+
     for vert in verts_in_group:
         total += vert.co
 
-    average = total / len(verts_in_group)
+    average = total / divide_by
+
     return average
 
 
@@ -657,6 +655,68 @@ def get_meshes_objects(armature_name=None, mode=0, check=True, visible_only=Fals
 
     return meshes
 
+def get_meshes_objects_for_export(armature_name=None, mode=0, check=True):
+    context = bpy.context
+    # Modes:
+    # 0 = With armatures only
+    # 1 = Top level only
+    # 2 = All meshes
+    # 3 = Selected only
+
+    if not armature_name:
+        armature = get_armature()
+        if armature:
+            armature_name = armature.name
+
+    meshes = []
+    
+    for ob in get_objects():
+            if ob is None:
+                continue
+            if ob.type != 'MESH':
+                continue
+                
+            if mode == 0 or mode == 5: 
+                if ob.parent:
+                    if ob.parent.type == 'ARMATURE' and ob.parent.name == armature_name:
+                        meshes.append(ob)
+                    elif ob.parent.parent and ob.parent.parent.type == 'ARMATURE' and ob.parent.parent.name == armature_name:
+                        meshes.append(ob) 
+
+            elif mode == 1:
+                if not ob.parent:
+                    meshes.append(ob)
+
+            elif mode == 2:
+                meshes.append(ob)
+
+            elif mode == 3:
+                if ob.select_get():
+                    meshes.append(ob)
+
+    # Check for broken meshes and delete them
+    if check:
+        current_active = context.view_layer.objects.active
+        to_remove = []
+        for mesh in meshes:
+            selected = mesh.select_get()
+            set_active(mesh)
+
+            if not context.view_layer.objects.active:
+                to_remove.append(mesh)
+
+            if not selected:
+                select(mesh, False)
+
+        for mesh in to_remove:
+            print('DELETED CORRUPTED MESH:', mesh.name, mesh.users)
+            meshes.remove(mesh)
+            delete(mesh)
+
+        if current_active:
+            set_active(current_active)
+
+    return meshes
 
 def join_meshes(armature_name=None, mode=0, apply_transformations=True, repair_shape_keys=True):
     # Modes:
@@ -1478,36 +1538,25 @@ def clean_material_names(mesh):
             mesh.active_material_index = j
             mesh.active_material.name = mat.name[:-len(mat.name.rstrip('0')) - 1]
 
-def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', mix_set='ALL', delete_old_vg=True):
+
+def mix_weights(mesh, vg_from, vg_to, mix_strength=1.0, mix_mode='ADD', delete_old_vg=True):
     """Mix the weights of two vertex groups on the mesh, optionally removing the vertex group named vg_from.
 
-    This function uses the Vertex Weight Mix modifier to efficiently mix vertex group weights.
-    """
-    # Ensure the correct shape key is active
+    Note that as of Blender 3.0+, existing references to vertex groups become invalid when applying certain modifiers,
+    including 'VERTEX_WEIGHT_MIX'. Keeping reference to the vertex groups' attributes such as their names seems ok
+    though. More information on this issue can be found in https://developer.blender.org/T93896"""
     mesh.active_shape_key_index = 0
-
-    # Create the Vertex Weight Mix modifier
-    mod = mesh.modifiers.new(name="VertexWeightMix_" + vg_from + "_into_" + vg_to, type='VERTEX_WEIGHT_MIX')
+    mod = mesh.modifiers.new("VertexWeightMix", 'VERTEX_WEIGHT_MIX')
     mod.vertex_group_a = vg_to
     mod.vertex_group_b = vg_from
     mod.mix_mode = mix_mode
-    mod.mix_set = mix_set  # Use 'ALL' to include all vertices
-    mod.mask_constant = mix_strength  # Strength of the mix
-
-    # Apply the modifier to the mesh
-    # Depending on your Blender version, you may need to adjust how the modifier is applied.
-    if bpy.ops.object.modifier_apply.poll():
-        mesh.modifiers.active = mod
-        bpy.ops.object.modifier_apply(modifier=mod.name)
-
-    # Optionally remove the source vertex group
+    mod.mix_set = 'B'
+    mod.mask_constant = mix_strength
+    apply_modifier(mod)
     if delete_old_vg:
-        vg_from_group = mesh.vertex_groups.get(vg_from)
-        if vg_from_group:
-            mesh.vertex_groups.remove(vg_from_group)
+        mesh.vertex_groups.remove(mesh.vertex_groups.get(vg_from))
+    mesh.active_shape_key_index = 0  # This line fixes a visual bug in 2.80 which causes random weights to be stuck after being merged
 
-    # Reset the active shape key index
-    mesh.active_shape_key_index = 0
 
 def get_user_preferences():
     return bpy.context.user_preferences if hasattr(bpy.context, 'user_preferences') else bpy.context.preferences
@@ -1833,7 +1882,6 @@ def fix_mmd_shader(mesh_obj: bpy.types.Object):
         # Exit the loop once the 'mmd_shader' node is found
         break
 
-
 def fix_vrm_shader(mesh: bpy.types.Mesh):
     # Iterate through each material slot in the mesh
     for mat_slot in mesh.material_slots:
@@ -1843,6 +1891,8 @@ def fix_vrm_shader(mesh: bpy.types.Mesh):
 
         is_vrm_mat = False
         nodes = mat_slot.material.node_tree.nodes
+        links = mat_slot.material.node_tree.links
+        
         # Iterate through each node in the material's node tree
         for node in nodes:
             # Check if the node has a node tree and its name contains 'MToon_unversioned'
@@ -1867,13 +1917,18 @@ def fix_vrm_shader(mesh: bpy.types.Mesh):
         if 'HAIR' in mat_slot.material.name:
             nodes_to_keep = ['DiffuseColor', 'MainTexture', 'Emission_Texture', 'SphereAddTexture']
 
-        # Iterate through each node in the material's node tree again
-        for node in nodes:
-            # Check if the node's name contains certain keywords and its label is not in the list of nodes to keep
-            if 'RGB' in node.name or 'Value' in node.name or 'Image Texture' in node.name or 'UV Map' in node.name or 'Mapping' in node.name:
-                if node.label not in nodes_to_keep:
-                    # Remove all links connected to the node
-                    mat_slot.material.node_tree.links = [link for link in mat_slot.material.node_tree.links if not (link.from_node == node or link.to_node == node)]
+        # Instead of list comprehension, remove links one by one
+        links_to_remove = []
+        for link in links:
+            if ('RGB' in link.from_node.name or 'Value' in link.from_node.name or 
+                'Image Texture' in link.from_node.name or 'UV Map' in link.from_node.name or 
+                'Mapping' in link.from_node.name):
+                if link.from_node.label not in nodes_to_keep:
+                    links_to_remove.append(link)
+
+        # Remove the links
+        for link in links_to_remove:
+            links.remove(link)
 
 
 def fix_twist_bones(mesh, bones_to_delete):
@@ -2298,10 +2353,3 @@ def set_material_shading():
                     space.shading.studiolight_background_alpha = 0.0
                     if bpy.app.version >= (2, 82):
                         space.shading.render_pass = 'COMBINED'
-
-def clear_unused_data():
-    """
-    Clear unused data blocks to improve memory usage.
-    """
-    # Purge orphan data blocks
-    bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)

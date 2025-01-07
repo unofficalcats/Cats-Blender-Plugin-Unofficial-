@@ -2002,7 +2002,7 @@ class ExportModel(bpy.types.Operator):
     filepath = bpy.props.StringProperty()
 
     def execute(self, context):
-        meshes = Common.get_meshes_objects()
+        meshes = Common.get_meshes_objects_for_export()
 
         # Check for warnings
         if not self.action == 'NO_CHECK':
