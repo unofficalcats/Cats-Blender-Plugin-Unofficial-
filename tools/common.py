@@ -1240,8 +1240,6 @@ def delete_zero_weight(armature_name=None, ignore=''):
             continue
 
         if keep_twists and ("_twist" in bone_name.lower() or "Twist" in bone_name):
-        if keep_twists and ("_twist" in bone_name.lower() or "Twist" in bone_name):
-            continue
             continue
 
 
