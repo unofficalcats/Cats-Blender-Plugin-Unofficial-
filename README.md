@@ -67,6 +67,7 @@ Maintained by Yusarina.
 - Jordo
 - Ruubick
 - 989onan
+- rurre
 
 Cats Blender Plugin was original developed by absolute quantum then maintained by the community, [click here](https://github.com/absolute-quantum/cats-blender-plugin) to see the original project.
 
