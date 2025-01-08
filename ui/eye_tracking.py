@@ -471,3 +471,4 @@ class EyeTrackingPanel(ToolPanel, bpy.types.Panel):
         row = col.row(align=True)
         row.label(text=t('EyeTrackingPanel.warn.assignEyes2'))
 
+
