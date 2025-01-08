@@ -657,12 +657,6 @@ def get_meshes_objects(armature_name=None, mode=0, check=True, visible_only=Fals
 
 def get_meshes_objects_for_export(armature_name=None, mode=0, check=True):
     context = bpy.context
-    # Modes:
-    # 0 = With armatures only
-    # 1 = Top level only
-    # 2 = All meshes
-    # 3 = Selected only
-
     if not armature_name:
         armature = get_armature()
         if armature:
@@ -671,50 +665,27 @@ def get_meshes_objects_for_export(armature_name=None, mode=0, check=True):
     meshes = []
     
     for ob in get_objects():
-            if ob is None:
-                continue
-            if ob.type != 'MESH':
-                continue
-                
-            if mode == 0 or mode == 5: 
-                if ob.parent:
-                    if ob.parent.type == 'ARMATURE' and ob.parent.name == armature_name:
-                        meshes.append(ob)
-                    elif ob.parent.parent and ob.parent.parent.type == 'ARMATURE' and ob.parent.parent.name == armature_name:
-                        meshes.append(ob) 
-
-            elif mode == 1:
-                if not ob.parent:
+        if ob is None or ob.type != 'MESH':
+            continue
+            
+        # Only include visible meshes
+        if is_hidden(ob):
+            continue
+            
+        if mode == 0 or mode == 5: 
+            if ob.parent:
+                if ob.parent.type == 'ARMATURE' and ob.parent.name == armature_name:
                     meshes.append(ob)
-
-            elif mode == 2:
+                elif ob.parent.parent and ob.parent.parent.type == 'ARMATURE' and ob.parent.parent.name == armature_name:
+                    meshes.append(ob)
+        elif mode == 1:
+            if not ob.parent:
                 meshes.append(ob)
-
-            elif mode == 3:
-                if ob.select_get():
-                    meshes.append(ob)
-
-    # Check for broken meshes and delete them
-    if check:
-        current_active = context.view_layer.objects.active
-        to_remove = []
-        for mesh in meshes:
-            selected = mesh.select_get()
-            set_active(mesh)
-
-            if not context.view_layer.objects.active:
-                to_remove.append(mesh)
-
-            if not selected:
-                select(mesh, False)
-
-        for mesh in to_remove:
-            print('DELETED CORRUPTED MESH:', mesh.name, mesh.users)
-            meshes.remove(mesh)
-            delete(mesh)
-
-        if current_active:
-            set_active(current_active)
+        elif mode == 2:
+            meshes.append(ob)
+        elif mode == 3:
+            if ob.select_get():
+                meshes.append(ob)
 
     return meshes
 
