@@ -1230,14 +1230,34 @@ def delete_zero_weight(armature_name=None, ignore=''):
 
     count = 0
     keep_twists = bpy.context.scene.delete_zero_weight_keep_twists
+    keep_empty_parents = bpy.context.scene.delete_zero_weight_keep_empty_parents
+    skip_hidden_bones = bpy.context.scene.delete_zero_weight_skip_hidden_bones
 
     for bone_name in not_used_bone_names:
+        bone = bone_name_to_edit_bone[bone_name]
+
+        if skip_hidden_bones and bone.hide:
+            continue
+
+        if keep_twists and ("_twist" in bone_name.lower() or "Twist" in bone_name):
         if keep_twists and ("_twist" in bone_name.lower() or "Twist" in bone_name):
             continue
+            continue
+
+
+        if keep_empty_parents:
+            found_non_empty_child = False
+            if bone:
+                for child in bone.children_recursive:
+                    if child.name in vertex_group_names_used:
+                        found_non_empty_child = True
+                        break
+            if found_non_empty_child:
+                continue
         
         if not bpy.context.scene.keep_end_bones or not is_end_bone(bone_name, armature_name):
             if bone_name not in Bones.dont_delete_these_bones and 'Root_' not in bone_name and bone_name != ignore:
-                armature.data.edit_bones.remove(bone_name_to_edit_bone[bone_name])  # delete bone
+                armature.data.edit_bones.remove(bone)  # delete bone
                 count += 1
                 if bone_name in vertex_group_name_to_objects_having_same_named_vertex_group:
                     for objects in vertex_group_name_to_objects_having_same_named_vertex_group[bone_name]:  # delete vertex groups
