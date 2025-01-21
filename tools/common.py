@@ -107,16 +107,28 @@ class SavedData:
             if self.__active_object not in ignore and self.__active_object != context.view_layer.objects.active:
                 set_active(get_objects().get(self.__active_object), skip_sel=True)
 
-
 def get_armature(armature_name=None):
     if not armature_name:
         armature_name = bpy.context.scene.armature
-    for obj in get_objects():
-        if obj.type == 'ARMATURE':
-            if obj.name == armature_name or Common.is_enum_empty(armature_name):
+        
+    # Get all objects in the scene
+    objects = get_objects()
+    if not objects:
+        return None
+        
+    # First try to find exact name match
+    for obj in objects:
+        if obj and obj.type == 'ARMATURE':
+            if obj.name == armature_name:
                 return obj
+                
+    # If no exact match, return first armature if name is empty
+    if Common.is_enum_empty(armature_name):
+        for obj in objects:
+            if obj and obj.type == 'ARMATURE':
+                return obj
+                
     return None
-
 
 def get_armature_objects():
     armatures = []
