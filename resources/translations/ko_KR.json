@@ -131,6 +131,7 @@
         "EyeTrackingPanel.error.wrongNameBody3": "      (현재로서는 '",
         "EyeTrackingPanel.warn.assignEyes1": "유니티에서 'LeftEye'와 'RightEye'를",
         "EyeTrackingPanel.warn.assignEyes2": "      적용하는 것을 잊지 마세요!",
+        "MergeArmature.error.pleaseFix": "아마추어를 병합하려면 '동일한 본 병합'을 활성화하거나 두 부모 오브젝트에 트랜스폼을 적용하세요 (Ctrl+A > 모든 트랜스폼)",
         "VisemePanel.label": "립싱크(Visemes)",
         "VisemePanel.error.noMesh": "메쉬가 발견되지 않음!",
         "BoneRootPanel.label": "본 부모설정",

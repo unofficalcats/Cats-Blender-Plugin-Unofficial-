@@ -93,6 +93,7 @@
         "cats_twist.tutorial_button.label": "ツイストボーンのチュートリアル",
         "keep_merged_bones": "マージされたボーンを保持",
         "merge_visible_meshes_only": "表示されているメッシュのみをマージ",
+        "MergeArmature.error.pleaseFix": "アーマチュアをマージするには、「同じボーンをマージ」を有効にするか、両方の親オブジェクトにトランスフォームを適用してください（Ctrl+A > すべてのトランスフォーム）",
         "DecimationPanel.label": "デシメーション",
         "DecimationPanel.decimationMode": "デシメーションモード:",
         "DecimationPanel.safeModeDesc": " まともな結果 - シェイプキーの損失はありません",
