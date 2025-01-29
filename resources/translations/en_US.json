@@ -255,6 +255,7 @@
         "RemoveConstraints.label": "Remove Bone Constraints",
         "RemoveConstraints.desc": "Removes constrains between bones causing specific bone movement as these are not used by VRChat",
         "RemoveConstraints.success": "Removed all bone constraints.",
+        "MergeArmature.error.pleaseFix": "To merge armatures, either enable 'Merge all Bones' or apply transforms on both parent objects (Ctrl+A > All Transforms)",
         "RecalculateNormals.label": "Recalculate Normals",
         "RecalculateNormals.desc": "Makes normals point inside of the selected mesh.\n\nDon't use this on good looking meshes as this can screw them up.\nUse this if there are random inverted or darker faces on the mesh",
         "RecalculateNormals.success": "Recalculated all normals.",
