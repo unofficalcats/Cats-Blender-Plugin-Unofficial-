@@ -305,6 +305,7 @@
         "InstallShotariya.error.version1": "Material Combiner is outdated!",
         "InstallShotariya.error.version2": "The latest version is required for this function.",
         "InstallShotariya.error.version3": "Please download and install it manually:",
+        "MergeArmature.error.pleaseFix": "To merge armatures, either enable 'Merge Same Bones' or apply transforms on both parent objects (Ctrl+A > All Transforms)",
         "ShotariyaButton.label": "Download Material Combiner",
         "ShotariyaButton.success": "Material Combiner link opened",
         "ImmersiveScalerButton.success": "Immersive Scaler link opened",
