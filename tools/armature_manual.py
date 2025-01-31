@@ -1726,7 +1726,16 @@ class CreateDigitigradeLegs(bpy.types.Operator):
 @register_wrap
 class DuplicateBonesButton(bpy.types.Operator):
     bl_idname = 'cats_manual.duplicate_bones'
-@@ -1927,51 +1739,65 @@ def poll(cls, context):
+    bl_label = t('DuplicateBonesButton.label')
+    bl_description = t('DuplicateBonesButton.desc')
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        active_obj = bpy.context.active_object
+        if not active_obj or not bpy.context.active_object.type == 'ARMATURE':
+            return False
+        if active_obj.mode == 'EDIT' and bpy.context.selected_editable_bones:
             return True
         elif active_obj.mode == 'POSE' and bpy.context.selected_pose_bones:
             return True
@@ -1789,9 +1798,18 @@ class DuplicateBonesButton(bpy.types.Operator):
         for orig_name, new_name in duplicate_groups.items():
             Common.mix_weights(mesh, orig_name, new_name, delete_old_vg=False)
 
+
 @register_wrap
 class ConnectBonesButton(bpy.types.Operator):
-@@ -1987,17 +1813,32 @@ def poll(cls, context):
+    bl_idname = 'cats_manual.connect_bones'
+    bl_label = 'Connect Bones'
+    bl_description = 'Connects all bones with their respective children'
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        active_obj = bpy.context.active_object
+        return active_obj and active_obj.type == 'ARMATURE'
 
     def execute(self, context):
         saved_data = Common.SavedData()
