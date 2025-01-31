@@ -90,6 +90,7 @@
         "ScalingPanel.imscaleOldVersion1": "Immersive Scalerがインストールされていません！",
         "ScalingPanel.imscaleNotInstalled1": "Immersive Scalerがインストールされていません！",
         "ScalingPanel.imscaleNotInstalled2": "手動でダウンロードしてインストールしてください：",
+        "MergeArmature.error.pleaseFix": "アーマチュアをマージするには、「同じボーンをマージ」を有効にするか、両方の親オブジェクトにトランスフォームを適用してください（Ctrl+A > すべてのトランスフォーム）",
         "cats_twist.tutorial_button.label": "ツイストボーンのチュートリアル",
         "keep_merged_bones": "マージされたボーンを保持",
         "merge_visible_meshes_only": "表示されているメッシュのみをマージ",

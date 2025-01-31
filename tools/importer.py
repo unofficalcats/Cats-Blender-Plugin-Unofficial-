@@ -252,6 +252,9 @@ def fix_bone_orientations(armature):
 
 
 def fix_armatures_post_import(pre_import_objects):
+    # Store current visibility states
+    saved_states = Common.SavedData()
+    
     arm_added_during_import = [obj for obj in bpy.data.objects if obj.type == 'ARMATURE' and obj not in pre_import_objects]
     for armature in arm_added_during_import:
         print('Added: ', armature.name)
@@ -262,7 +265,9 @@ def fix_armatures_post_import(pre_import_objects):
         if hasattr(armature, 'draw_type'):
             armature.draw_type = 'WIRE'
             armature.show_in_front = True
-
+            
+    # Restore visibility states
+    saved_states.load(load_mode=False, load_select=False, load_hide=True)
 
 @register_wrap
 class ZipPopup(bpy.types.Operator):
