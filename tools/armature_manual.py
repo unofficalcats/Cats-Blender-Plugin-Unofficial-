@@ -1723,194 +1723,6 @@ class CreateDigitigradeLegs(bpy.types.Operator):
             #finally done!
         return {'FINISHED'}
 
-
-@register_wrap
-class FixFBTButton(bpy.types.Operator):
-    bl_idname = 'cats_manual.fix_fbt'
-    bl_label = t('FixFBTButton.label')
-    bl_description = t('FixFBTButton.desc')
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    @classmethod
-    def poll(cls, context):
-        return Common.get_armature()
-
-    def execute(self, context):
-        saved_data = Common.SavedData()
-
-        armature = Common.set_default_stage()
-        Common.remove_rigidbodies_global()
-        Common.switch('EDIT')
-
-
-        hips = armature.data.edit_bones.get('Hips')
-        spine = armature.data.edit_bones.get('Spine')
-        left_leg = armature.data.edit_bones.get('Left leg')
-        right_leg = armature.data.edit_bones.get('Right leg')
-        left_leg_new = armature.data.edit_bones.get('Left leg 2')
-        right_leg_new = armature.data.edit_bones.get('Right leg 2')
-        left_leg_new_alt = armature.data.edit_bones.get('Left_Leg_2')
-        right_leg_new_alt = armature.data.edit_bones.get('Right_Leg_2')
-
-        if not hips or not spine or not left_leg or not right_leg:
-            self.report({'ERROR'}, t('FixFBTButton.error.bonesNotFound'))
-            saved_data.load()
-            return {'CANCELLED'}
-
-        if left_leg_new or right_leg_new or left_leg_new_alt or right_leg_new_alt:
-            self.report({'ERROR'}, t('FixFBTButton.error.alreadyApplied'))
-            saved_data.load()
-            return {'CANCELLED'}
-
-        # FBT Fix
-        # Disconnect bones
-        for child in hips.children:
-            child.use_connect = False
-        for child in left_leg.children:
-            child.use_connect = False
-        for child in right_leg.children:
-            child.use_connect = False
-
-        # Flip hips
-        hips.head = spine.head
-        hips.tail = spine.head
-        hips.tail.z = left_leg.head.z
-
-        if hips.tail.z > hips.head.z:
-            hips.tail.z -= 0.1
-
-        # Create new leg bones and put them at the old location
-        if not left_leg_new:
-            if left_leg_new_alt:
-                left_leg_new = left_leg_new_alt
-                left_leg_new.name = 'Left leg 2'
-            else:
-                left_leg_new = armature.data.edit_bones.new('Left leg 2')
-        if not right_leg_new:
-            if right_leg_new_alt:
-                right_leg_new = right_leg_new_alt
-                right_leg_new.name = 'Right leg 2'
-            else:
-                right_leg_new = armature.data.edit_bones.new('Right leg 2')
-
-        left_leg_new.head = left_leg.head
-        left_leg_new.tail = left_leg.tail
-
-        right_leg_new.head = right_leg.head
-        right_leg_new.tail = right_leg.tail
-
-        # Set new location for old leg bones
-        left_leg.tail = left_leg.head
-        left_leg.tail.z = left_leg.head.z + 0.1
-
-        right_leg.tail = right_leg.head
-        right_leg.tail.z = right_leg.head.z + 0.1
-
-        left_leg_new.parent = left_leg
-        right_leg_new.parent = right_leg
-
-        # Fixes bones disappearing, prevents bones from having their tail and head at the exact same position
-        for bone in armature.data.edit_bones:
-            if round(bone.head.x, 5) == round(bone.tail.x, 5) \
-                    and round(bone.head.y, 5) == round(bone.tail.y, 5) \
-                    and round(bone.head.z, 5) == round(bone.tail.z, 5):
-                if bone.name == 'Hips':
-                    bone.tail.z -= 0.1
-                else:
-                    bone.tail.z += 0.1
-
-        Common.switch('OBJECT')
-
-        saved_data.load()
-
-        self.report({'INFO'}, t('FixFBTButton.success'))
-        return {'FINISHED'}
-
-
-@register_wrap
-class RemoveFBTButton(bpy.types.Operator):
-    bl_idname = 'cats_manual.remove_fbt'
-    bl_label = t('RemoveFBTButton.label')
-    bl_description = t('RemoveFBTButton.desc')
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    @classmethod
-    def poll(cls, context):
-        return Common.get_armature()
-
-    def execute(self, context):
-        saved_data = Common.SavedData()
-
-        armature = Common.set_default_stage()
-        Common.remove_rigidbodies_global()
-        Common.switch('EDIT')
-
-
-        hips = armature.data.edit_bones.get('Hips')
-        spine = armature.data.edit_bones.get('Spine')
-        left_leg = armature.data.edit_bones.get('Left leg')
-        right_leg = armature.data.edit_bones.get('Right leg')
-        left_leg_new = armature.data.edit_bones.get('Left leg 2')
-        right_leg_new = armature.data.edit_bones.get('Right leg 2')
-
-        if not hips or not spine or not left_leg or not right_leg:
-            saved_data.load()
-            self.report({'ERROR'}, t('RemoveFBTButton.error.bonesNotFound'))
-            saved_data.load()
-            return {'CANCELLED'}
-
-        if not left_leg_new or not right_leg_new:
-            saved_data.load()
-            self.report({'ERROR'}, t('RemoveFBTButton.error.notApplied'))
-            return {'CANCELLED'}
-
-        # Remove FBT Fix
-        # Corrects hips
-        if hips.head.z > hips.tail.z:
-            # Put Hips in the center of the leg bones
-            hips.head.x = (right_leg.head.x + left_leg.head.x) / 2
-
-            # Put Hips at 33% between spine and legs
-            hips.head.z = left_leg.head.z + (spine.head.z - left_leg.head.z) * 0.33
-
-            # If Hips are below or at the leg bones, put them above
-            if hips.head.z <= right_leg.head.z:
-                hips.head.z = right_leg.head.z + 0.1
-
-            # Make Hips point straight up
-            hips.tail.x = hips.head.x
-            hips.tail.y = hips.head.y
-            hips.tail.z = spine.head.z
-
-            if hips.tail.z < hips.head.z:
-                hips.tail.z = hips.tail.z + 0.1
-
-        # Put the original legs at their old location
-        left_leg.head = left_leg_new.head
-        left_leg.tail = left_leg_new.tail
-
-        right_leg.head = right_leg_new.head
-        right_leg.tail = right_leg_new.tail
-
-        # Remove second leg bones
-        armature.data.edit_bones.remove(left_leg_new)
-        armature.data.edit_bones.remove(right_leg_new)
-
-        # Fixes bones disappearing, prevents bones from having their tail and head at the exact same position
-        for bone in armature.data.edit_bones:
-            if round(bone.head.x, 5) == round(bone.tail.x, 5) \
-                    and round(bone.head.y, 5) == round(bone.tail.y, 5) \
-                    and round(bone.head.z, 5) == round(bone.tail.z, 5):
-                bone.tail.z += 0.1
-
-        Common.switch('OBJECT')
-
-        saved_data.load()
-
-        self.report({'INFO'}, t('RemoveFBTButton.success'))
-        return {'FINISHED'}
-
-
 @register_wrap
 class DuplicateBonesButton(bpy.types.Operator):
     bl_idname = 'cats_manual.duplicate_bones'
@@ -1927,50 +1739,64 @@ class DuplicateBonesButton(bpy.types.Operator):
             return True
         elif active_obj.mode == 'POSE' and bpy.context.selected_pose_bones:
             return True
-
         return False
 
     def execute(self, context):
         saved_data = Common.SavedData()
-
         armature = bpy.context.object
+        
+        # Cache edit bones
+        edit_bones = armature.data.edit_bones
+        selected_bones = bpy.context.selected_editable_bones
+        bone_count = len(selected_bones)
+        
+        # Create mapping for duplicate bones
+        duplicate_vertex_groups = {
+            bone.name: f"{bone.name}{'_' if not bone.name.endswith('_') else ''}copy"
+            for bone in selected_bones
+        }
+        
+        # Batch create bones
+        new_bones = {}
+        for orig_name, new_name in duplicate_vertex_groups.items():
+            orig_bone = edit_bones.get(orig_name)
+            new_bone = edit_bones.new(new_name)
+            new_bones[new_name] = new_bone
+            
+            new_bone.head = orig_bone.head
+            new_bone.tail = orig_bone.tail
+            new_bone.parent = orig_bone.parent
 
-        Common.switch('EDIT')
+        # Fix parenting in batch
+        for new_name, new_bone in new_bones.items():
+            if new_bone.parent and new_bone.parent.name in duplicate_vertex_groups:
+                new_bone.parent = edit_bones.get(duplicate_vertex_groups[new_bone.parent.name])
 
-        bone_count = len(bpy.context.selected_editable_bones)
+        # Process vertex groups for all meshes
+        wm = context.window_manager
+        meshes = Common.get_meshes_objects(armature_name=armature.name)
+        wm.progress_begin(0, len(meshes))
 
-        # Create the duplicate bones
-        duplicate_vertex_groups = {}
-        for bone in bpy.context.selected_editable_bones:
-            separator = '_'
-            if bone.name.endswith('_'):
-                separator = ''
-            bone_new = armature.data.edit_bones.new(bone.name + separator + 'copy')
-            bone_new.parent = bone.parent
+        for idx, mesh in enumerate(meshes):
+            self._process_mesh_weights(mesh, duplicate_vertex_groups)
+            wm.progress_update(idx)
 
-            bone_new.head = bone.head
-            bone_new.tail = bone.tail
-            duplicate_vertex_groups[bone.name] = bone_new.name
-
-        # Fix bone parenting
-        for bone_name in duplicate_vertex_groups.values():
-            bone = armature.data.edit_bones.get(bone_name)
-            if bone.parent.name in duplicate_vertex_groups.keys():
-                bone.parent = armature.data.edit_bones.get(duplicate_vertex_groups[bone.parent.name])
-
-        # Create the missing vertex groups and duplicate the weight
-        Common.switch('OBJECT')
-        for mesh in Common.get_meshes_objects(armature_name=armature.name):
-            Common.set_active(mesh)
-
-            for bone_from, bone_to in duplicate_vertex_groups.items():
-                mesh.vertex_groups.new(name=bone_to)
-                Common.mix_weights(mesh, bone_from, bone_to, delete_old_vg=False)
-
+        wm.progress_end()
         saved_data.load()
 
         self.report({'INFO'}, t('DuplicateBonesButton.success', number=str(bone_count)))
         return {'FINISHED'}
+
+    def _process_mesh_weights(self, mesh, duplicate_groups):
+        Common.set_active(mesh)
+        
+        # Create all vertex groups first
+        for new_name in duplicate_groups.values():
+            mesh.vertex_groups.new(name=new_name)
+            
+        # Mix weights in batch
+        for orig_name, new_name in duplicate_groups.items():
+            Common.mix_weights(mesh, orig_name, new_name, delete_old_vg=False)
 
 
 @register_wrap
@@ -1987,17 +1813,32 @@ class ConnectBonesButton(bpy.types.Operator):
 
     def execute(self, context):
         saved_data = Common.SavedData()
-
         armature = bpy.context.object
-
-        Common.switch('EDIT')
-
-        Common.fix_bone_orientations(armature)
-
-        saved_data.load()
-
-        self.report({'INFO'}, 'Connected all bones!')
-        return {'FINISHED'}
+        
+        try:
+            Common.switch('EDIT')
+            
+            # Cache edit bones for better performance
+            edit_bones = armature.data.edit_bones
+            bones_processed = 0
+            
+            # Process bone connections in batch
+            for bone in edit_bones:
+                if bone.parent:
+                    bone.use_connect = True
+                    bones_processed += 1
+            
+            Common.fix_bone_orientations(armature)
+            
+            self.report({'INFO'}, f'Connected {bones_processed} bones successfully!')
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f'Failed to connect bones: {str(e)}')
+            return {'CANCELLED'}
+            
+        finally:
+            saved_data.load()
 
 
 @register_wrap
@@ -2096,69 +1937,6 @@ class ConvertToValveButton(bpy.types.Operator):
 
         self.report({'INFO'}, 'Connected all bones!')
         return {'FINISHED'}
-
-@register_wrap
-class TestButton(bpy.types.Operator):
-    bl_idname = 'cats_manual.test'
-    bl_label = 'Testing Stuff'
-    bl_description = 'This is for tests by the devs only'
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    def execute(self, context):
-        self.copy_weights(context)
-
-        self.report({'INFO'}, 'Test complete!')
-        return {'FINISHED'}
-
-    def copy_weights(self, context):
-        # mesh_source = Common.get_objects()['ClothesCombined']
-        # mesh_target = Common.get_objects()['ClothesW']
-        #
-        # mesh_source = Common.get_objects()['ClothesCombined']
-        # mesh_target = Common.get_objects()['ClothesW']
-
-        mesh_source = Common.get_objects()['Legs']
-        mesh_target = Common.get_objects()['_LegsW']
-
-        def group_source(vg):
-            return mesh_source.vertex_groups[vg.group]
-
-        def group_target(vg):
-            return mesh_target.vertex_groups[vg.group]
-
-        # Copy all vertex groups
-        for vg in mesh_source.vertex_groups:
-            if not mesh_target.vertex_groups.get(vg.name):
-                mesh_target.vertex_groups.new(name=vg.name)
-
-        # Copy vertex group weights
-        i = 0
-        for v in mesh_target.data.vertices:
-            # print(i)
-
-            # Find closest vert in source
-            v_source = None
-            v_dist = 100
-
-            for v2 in mesh_source.data.vertices:
-                if (v.co - v2.co).length < v_dist:
-                    v_dist = (v.co - v2.co).length
-                    v_source = v2
-                    if v_dist < 0.0001:
-                        break
-
-            print(i, v_dist)
-
-            for vg in v_source.groups:
-                vg_target = group_target(vg)
-                # print(vg_target.name, vg.weight)
-
-                vg_target.add([v.index], vg.weight, 'REPLACE')
-
-            i += 1
-            # if i == 1000:
-            #     break
-
 
 @register_wrap
 class RemoveRigidbodiesJointsOperator(bpy.types.Operator):
