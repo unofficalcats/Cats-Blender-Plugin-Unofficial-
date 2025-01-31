@@ -105,8 +105,3 @@ class OtherOptionsPanel(ToolPanel, bpy.types.Panel):
             row = col.row(align=True)
             row.scale_y = button_height
             row.operator(Armature_manual.ConvertToValveButton.bl_idname, icon='SMALL_CAPS')
-
-            if globs.dev_branch:
-                row = col.row(align=True)
-                row.scale_y = button_height
-                row.operator(Armature_manual.TestButton.bl_idname)
