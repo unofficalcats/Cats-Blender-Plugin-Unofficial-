@@ -30,8 +30,9 @@ class QuickAccessPanel(ToolPanel, bpy.types.Panel):
         updater.draw_update_notification_panel(box)
 
         # Version warnings section
-        has_warnings = (bpy.app.version < (4, 2, 0) or 
-                        bpy.app.version > (4, 3, 99) or 
+        has_warnings = (bpy.app.version < (4, 3, 0) or 
+                        bpy.app.version > (4, 4, 99) or 
+                        (4, 4, 0) <= bpy.app.version <= (4, 4, 99) or  
                         not globs.dict_found)
 
         if has_warnings:
@@ -92,13 +93,13 @@ class QuickAccessPanel(ToolPanel, bpy.types.Panel):
         self.draw_pose_section(pose_box, context)
 
     def draw_version_warnings(self, col, context):
-        if bpy.app.version < (4, 2, 0):
+        if bpy.app.version < (4, 3, 0):
             self.draw_warning(col, "QuickAccess.warn.oldBlender", 3)
             
-        if bpy.app.version > (4, 3, 99):
+        if bpy.app.version > (4, 4, 99):
             self.draw_warning(col, "QuickAccess.warn.newBlender", 3)
             
-        if bpy.app.version > (4, 3, 99):
+        if bpy.app.version == (4, 4, 0):
             self.draw_warning(col, "QuickAccess.warn.Alpha", 3)
             
         if not globs.dict_found:
